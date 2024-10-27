@@ -21,7 +21,6 @@ function generateUniqueID($conn) {
 }
 
 // Handle form submission
-// Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['name']) && !empty($_POST['mobile_number'])) {
     $id = $_POST['userId']; // Get the user ID from the form
     $name = $_POST['name'];
@@ -84,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['name']) && !empty($_P
     exit;
 }
 
-
 // Fetch users from database
 $users = [];
 $result = $conn->query("SELECT * FROM users");
@@ -93,7 +91,6 @@ if ($result->num_rows > 0) {
         $users[] = $row;
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -102,158 +99,166 @@ if ($result->num_rows > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-table, th, td {
-    border: 1px solid black;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-}
-
-th {
-    background-color: #f2f2f2;
-}
-
-input[type="text"], input[type="email"], input[type="date"], input[type="file"] {
-    width: 100%;
-    padding: 8px;
-    margin: 5px 0;
-    box-sizing: border-box;
-}
-
-button {
-    background-color: #4CAF50; /* Green */
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-    </style>
+       .left
+       {
+        margin-left: 20px;
+       }
+        </style>
 </head>
 <body>
 
-<h2>User Management</h2>
-<button onclick="toggleUserForm()">Add Candidate Info</button>
-<button onclick="toggleUserTable()">Show Candidate Info</button>
+<div class="left">
+    <h2 class="my-4">User Management</h2>
+    <button class="btn btn-primary" onclick="toggleUserForm()">Add Candidate Info</button>
+    <button class="btn btn-info" onclick="toggleUserTable()">Show Candidate Info</button>
 
-<div id="userForm" style="display:none;">
-    <form method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="userId" id="userId" value="">
-        <input type="hidden" name="editFlag" id="editFlag" value="false">
-        <label>Name:</label><input type="text" name="name" id="userName" required><br>
-        <label>Mobile Number:</label><input type="text" name="mobile_number" id="userMobile" required><br>
-        <label>WhatsApp No:</label><input type="text" name="whatsapp_no" id="userWhatsApp"><br>
-        <label>Email:</label><input type="email" name="email" id="userEmail"><br>
-        <label>Date of Birth:</label><input type="date" name="dob" id="userDOB"><br>
-        <label>City:</label><input type="text" name="city" id="userCity" required><br>
-        <label>Zipcode:</label><input type="text" name="zipcode" id="userZipcode" required><br>
-        <label>Date of Joining:</label><input type="date" name="doj" id="userDOJ"><br>
-        <label>Transaction ID:</label><input type="text" name="transaction_id" id="userTransactionID"><br>
-        <label>Offer Letter:</label><input type="file" name="offer_letter" accept=".pdf,.doc,.docx"><br>
-        <label>Intern Certificate:</label><input type="file" name="intern_certificate" accept=".pdf,.doc,.docx"><br>
-        <label>Transaction Proof:</label><input type="file" name="transaction_proof" accept=".pdf,.doc,.docx"><br>
-        <input type="submit" value="Submit">
-    </form>
+    <div id="userForm" style="display:none;" class="mt-4">
+        <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="userId" id="userId" value="">
+            <input type="hidden" name="editFlag" id="editFlag" value="false">
+            <div class="form-group">
+                <label for="userName">Name:</label>
+                <input type="text" class="form-control" name="name" id="userName" required>
+            </div>
+            <div class="form-group">
+                <label for="userMobile">Mobile Number:</label>
+                <input type="text" class="form-control" name="mobile_number" id="userMobile" required>
+            </div>
+            <div class="form-group">
+                <label for="userWhatsApp">WhatsApp No:</label>
+                <input type="text" class="form-control" name="whatsapp_no" id="userWhatsApp">
+            </div>
+            <div class="form-group">
+                <label for="userEmail">Email:</label>
+                <input type="email" class="form-control" name="email" id="userEmail">
+            </div>
+            <div class="form-group">
+                <label for="userDOB">Date of Birth:</label>
+                <input type="date" class="form-control" name="dob" id="userDOB">
+            </div>
+            <div class="form-group">
+                <label for="userCity">City:</label>
+                <input type="text" class="form-control" name="city" id="userCity" required>
+            </div>
+            <div class="form-group">
+                <label for="userZipcode">Zipcode:</label>
+                <input type="text" class="form-control" name="zipcode" id="userZipcode" required>
+            </div>
+            <div class="form-group">
+                <label for="userDOJ">Date of Joining:</label>
+                <input type="date" class="form-control" name="doj" id="userDOJ">
+            </div>
+            <div class="form-group">
+                <label for="userTransactionID">Transaction ID:</label>
+                <input type="text" class="form-control" name="transaction_id" id="userTransactionID">
+            </div>
+            <div class="form-group">
+                <label for="offerLetter">Offer Letter:</label>
+                <input type="file" class="form-control-file" name="offer_letter" accept=".pdf,.doc,.docx">
+            </div>
+            <div class="form-group">
+                <label for="internCertificate">Intern Certificate:</label>
+                <input type="file" class="form-control-file" name="intern_certificate" accept=".pdf,.doc,.docx">
+            </div>
+            <div class="form-group">
+                <label for="transactionProof">Transaction Proof:</label>
+                <input type="file" class="form-control-file" name="transaction_proof" accept=".pdf,.doc,.docx">
+            </div>
+            <input type="submit" class="btn btn-success" value="Submit"> <br > <br >
+        </form>
+    </div>
+
+    <table id="userTable" style="display:none;" class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>WhatsApp</th>
+                <th>Email</th>
+                <th>D.O.B</th>
+                <th>City</th>
+                <th>Zipcode</th>
+                <th>D.O.J</th>
+                <th>Transaction ID</th>
+                <th>Offer Letter</th>
+                <th>Intern Certificate</th>
+                <th>Transaction Proof</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($users as $user): ?>
+                <tr>
+                    <td><?php echo $user['id']; ?></td>
+                    <td><?php echo $user['name']; ?></td>
+                    <td><?php echo $user['mobile_number']; ?></td>
+                    <td><?php echo $user['whatsapp_no']; ?></td>
+                    <td><?php echo $user['email']; ?></td>
+                    <td><?php echo $user['dob']; ?></td>
+                    <td><?php echo $user['city']; ?></td>
+                    <td><?php echo $user['zipcode']; ?></td>
+                    <td><?php echo $user['doj']; ?></td>
+                    <td><?php echo $user['transaction_id']; ?></td>
+                    <td><a href="<?php echo $user['offer_letter']; ?>" target="_blank">View</a></td>
+                    <td><a href="<?php echo $user['intern_certificate']; ?>" target="_blank">View</a></td>
+                    <td><a href="<?php echo $user['transaction_proof']; ?>" target="_blank">View</a></td>
+                    <td class="actions"><center>
+                        <button class="btn btn-warning" onclick="editUser('<?php echo $user['id']; ?>')">Edit <br /></button><br />
+                        <button class="btn btn-danger" onclick="deleteUser('<?php echo $user['id']; ?>')"> Delete</button><br />
+                        </center></td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
 </div>
 
-<table id="userTable" style="display:none;">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Mobile Number</th>
-            <th>WhatsApp No</th>
-            <th>Email</th>
-            <th>Date of Birth</th>
-            <th>City</th>
-            <th>Zipcode</th>
-            <th>Date of Joining</th>
-            <th>Transaction ID</th>
-            <th>Offer Letter</th>
-            <th>Intern Certificate</th>
-            <th>Transaction Proof</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ($users as $user): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($user['id']); ?></td>
-            <td><?php echo htmlspecialchars($user['name']); ?></td>
-            <td><?php echo htmlspecialchars($user['mobile_number']); ?></td>
-            <td><?php echo htmlspecialchars($user['whatsapp_no']); ?></td>
-            <td><?php echo htmlspecialchars($user['email']); ?></td>
-            <td><?php echo htmlspecialchars($user['dob']); ?></td>
-            <td><?php echo htmlspecialchars($user['city']); ?></td>
-            <td><?php echo htmlspecialchars($user['zipcode']); ?></td>
-            <td><?php echo htmlspecialchars($user['doj']); ?></td>
-            <td><?php echo htmlspecialchars($user['transaction_id']); ?></td>
-            <td><a href="<?php echo htmlspecialchars($user['offer_letter']); ?>">View</a></td>
-            <td><a href="<?php echo htmlspecialchars($user['intern_certificate']); ?>">View</a></td>
-            <td><a href="<?php echo htmlspecialchars($user['transaction_proof']); ?>">View</a></td>
-            <td>
-                <button onclick="editUser('<?php echo htmlspecialchars($user['id']); ?>', '<?php echo htmlspecialchars($user['name']); ?>', '<?php echo htmlspecialchars($user['mobile_number']); ?>', '<?php echo htmlspecialchars($user['whatsapp_no']); ?>', '<?php echo htmlspecialchars($user['email']); ?>', '<?php echo htmlspecialchars($user['dob']); ?>', '<?php echo htmlspecialchars($user['city']); ?>', '<?php echo htmlspecialchars($user['zipcode']); ?>', '<?php echo htmlspecialchars($user['doj']); ?>',                '<?php echo htmlspecialchars($user['transaction_id']); ?>')">Edit</button>
-                <a href="delete_user.php?id=<?php echo htmlspecialchars($user['id']); ?>" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
-            </td>
-        </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
-
+<!-- Bootstrap JS and dependencies -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script>
-    // Function to show/hide the user form
-    function toggleUserForm() {
-        var userForm = document.getElementById('userForm');
-        userForm.style.display = userForm.style.display === 'none' ? 'block' : 'none';
-        // Clear form fields
-        if (userForm.style.display === 'block') {
-            document.getElementById('userForm').reset();
-            document.getElementById('editFlag').value = 'false';
-        }
-    }
+function toggleUserForm() {
+    var form = document.getElementById('userForm');
+    var table = document.getElementById('userTable');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    table.style.display = 'none';
+}
 
-    // Function to show/hide the user table
-    function toggleUserTable() {
-        var userTable = document.getElementById('userTable');
-        userTable.style.display = userTable.style.display === 'none' ? 'table' : 'none';
-    }
+function toggleUserTable() {
+    var form = document.getElementById('userForm');
+    var table = document.getElementById('userTable');
+    table.style.display = table.style.display === 'none' ? 'table' : 'none';
+    form.style.display = 'none';
+}
 
-    // Function to populate the form with user data for editing
-    function editUser(id, name, mobile, whatsapp, email, dob, city, zipcode, doj, transaction_id) {
-        document.getElementById('userId').value = id;
-        document.getElementById('userName').value = name;
-        document.getElementById('userMobile').value = mobile;
-        document.getElementById('userWhatsApp').value = whatsapp;
-        document.getElementById('userEmail').value = email;
-        document.getElementById('userDOB').value = dob;
-        document.getElementById('userCity').value = city;
-        document.getElementById('userZipcode').value = zipcode;
-        document.getElementById('userDOJ').value = doj;
-        document.getElementById('userTransactionID').value = transaction_id;
-        document.getElementById('editFlag').value = 'true';
-        toggleUserForm();
+function editUser(id) {
+    // Fetch user data and populate the form
+    // This is a simplified example; you'll want to fetch data from your database in a real application
+    var user = <?php echo json_encode($users); ?>.find(user => user.id === id);
+    document.getElementById('userId').value = user.id;
+    document.getElementById('userName').value = user.name;
+    document.getElementById('userMobile').value = user.mobile_number;
+    document.getElementById('userWhatsApp').value = user.whatsapp_no;
+    document.getElementById('userEmail').value = user.email;
+    document.getElementById('userDOB').value = user.dob;
+    document.getElementById('userCity').value = user.city;
+    document.getElementById('userZipcode').value = user.zipcode;
+    document.getElementById('userDOJ').value = user.doj;
+    document.getElementById('userTransactionID').value = user.transaction_id;
+    document.getElementById('editFlag').value = 'true';
+    toggleUserForm();
+}
+
+function deleteUser(id) {
+    if (confirm("Are you sure you want to delete this user?")) {
+        window.location.href = 'delete_user.php?id=' + id;
     }
+}
 </script>
 
-<?php
-$conn->close();
-?>
-
+</body>
+</html>
