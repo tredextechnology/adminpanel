@@ -106,6 +106,7 @@ if ($result->num_rows > 0) {
        {
         margin-left: 20px;
        }
+       
         </style>
 </head>
 <body>
@@ -275,6 +276,7 @@ function deleteUser(id) {
         window.location.href = 'delete_user.php?id=' + id;
     }
 }
+
 </script>
 
 </body>
