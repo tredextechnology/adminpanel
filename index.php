@@ -112,8 +112,8 @@ if ($result->num_rows > 0) {
 
 <div class="left">
     <h2 class="my-4">User Management</h2>
-    <button class="btn btn-primary" onclick="toggleUserForm()">Add Candidate Info</button>
-    <button class="btn btn-info" onclick="toggleUserTable()">Show Candidate Info</button>
+    <button class="btn btn-primary" id="toggleFormButton" onclick="toggleUserForm()">Add Candidate Info</button>
+<button class="btn btn-info" id="toggleTableButton" onclick="toggleUserTable()">Show Candidate Info</button>
 
     <div id="userForm" style="display:none;" class="mt-4">
         <form method="POST" enctype="multipart/form-data">
@@ -224,16 +224,33 @@ if ($result->num_rows > 0) {
 function toggleUserForm() {
     var form = document.getElementById('userForm');
     var table = document.getElementById('userTable');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-    table.style.display = 'none';
+    var button = document.getElementById('toggleFormButton');
+
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        table.style.display = 'none';
+        button.innerText = "Close Form";
+    } else {
+        form.style.display = 'none';
+        button.innerText = "Add Candidate Info";
+    }
 }
 
 function toggleUserTable() {
     var form = document.getElementById('userForm');
     var table = document.getElementById('userTable');
-    table.style.display = table.style.display === 'none' ? 'table' : 'none';
-    form.style.display = 'none';
+    var button = document.getElementById('toggleTableButton');
+
+    if (table.style.display === 'none') {
+        table.style.display = 'table';
+        form.style.display = 'none';
+        button.innerText = "Close Table";
+    } else {
+        table.style.display = 'none';
+        button.innerText = "Show Candidate Info";
+    }
 }
+
 
 function editUser(id) {
     // Fetch user data and populate the form
