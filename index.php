@@ -20,53 +20,16 @@ function generateUniqueID($conn) {
     return $id;
 }
 
-// Function to synchronize the uploads folder with the database
-function synchronizeUploads($conn) {
-    $result = $conn->query("SELECT * FROM users");
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $offer_letter = $row['offer_letter'];
-            $intern_certificate = $row['intern_certificate'];
-            $transaction_proof = $row['transaction_proof'];
-
-            // Check if offer letter exists
-            if (!file_exists($offer_letter)) {
-                $stmt = $conn->prepare("UPDATE users SET offer_letter = ? WHERE id = ?");
-                $nullValue = null;
-                $stmt->bind_param("ss", $nullValue, $row['id']);
-                $stmt->execute();
-                $stmt->close();
-            }
-
-            // Check if intern certificate exists
-            if (!file_exists($intern_certificate)) {
-                $stmt = $conn->prepare("UPDATE users SET intern_certificate = ? WHERE id = ?");
-                $nullValue = null;
-                $stmt->bind_param("ss", $nullValue, $row['id']);
-                $stmt->execute();
-                $stmt->close();
-            }
-
-            // Check if transaction proof exists
-            if (!file_exists($transaction_proof)) {
-                $stmt = $conn->prepare("UPDATE users SET transaction_proof = ? WHERE id = ?");
-                $nullValue = null;
-                $stmt->bind_param("ss", $nullValue, $row['id']);
-                $stmt->execute();
-                $stmt->close();
-            }
-        }
-    }
-}
-
+// Handle form submission
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['name']) && !empty($_POST['mobile_number'])) {
-    $id = generateUniqueID($conn);
+    $id = $_POST['userId']; // Get the user ID from the form
     $name = $_POST['name'];
     $mobile_number = $_POST['mobile_number'];
     $whatsapp_no = $_POST['whatsapp_no'];
     $email = $_POST['email'];
     $dob = $_POST['dob'];
+    $city = $_POST['city'];
     $zipcode = $_POST['zipcode'];
     $doj = $_POST['doj'];
     $transaction_id = $_POST['transaction_id'];
@@ -92,16 +55,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['name']) && !empty($_P
     }
 
     if (!empty($_FILES['transaction_proof']['name'])) {
-        $transaction_proof_path = $transaction_proof_dir . $id . "_proof_" . basename($_FILES["transaction_proof"]["name"]);
+        $transaction_proof_path = $transaction_proof_dir . $id . "_transaction_" . basename($_FILES["transaction_proof"]["name"]);
         move_uploaded_file($_FILES["transaction_proof"]["tmp_name"], $transaction_proof_path);
     }
 
-    // Insert data into database
-    $stmt = $conn->prepare("INSERT INTO users (id, name, mobile_number, whatsapp_no, email, dob, zipcode, doj, transaction_id, offer_letter, intern_certificate, transaction_proof) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssssssss", $id, $name, $mobile_number, $whatsapp_no, $email, $dob, $zipcode, $doj, $transaction_id, $offer_letter_path, $intern_certificate_path, $transaction_proof_path);
+    // Check if we are editing an existing user
+    if ($_POST['editFlag'] == 'true') {
+        // Update existing user in the database
+        $stmt = $conn->prepare("UPDATE users SET name=?, mobile_number=?, whatsapp_no=?, email=?, dob=?, city=?, zipcode=?, doj=?, transaction_id=?, offer_letter=?, intern_certificate=?, transaction_proof=? WHERE id=?");
+        $stmt->bind_param("sssssssssssss", $name, $mobile_number, $whatsapp_no, $email, $dob, $city, $zipcode, $doj, $transaction_id, $offer_letter_path, $intern_certificate_path, $transaction_proof_path, $id);
+    } else {
+        // Insert new user into the database
+        $id = generateUniqueID($conn); // Ensure ID is generated for new users
+        $stmt = $conn->prepare("INSERT INTO users (id, name, mobile_number, whatsapp_no, email, dob, city, zipcode, doj, transaction_id, offer_letter, intern_certificate, transaction_proof) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssssssssss", $id, $name, $mobile_number, $whatsapp_no, $email, $dob, $city, $zipcode, $doj, $transaction_id, $offer_letter_path, $intern_certificate_path, $transaction_proof_path);
+    }
 
     if ($stmt->execute()) {
-        echo "<p>User added successfully with ID: $id</p>";
+        echo "<p>User added/updated successfully with ID: $id</p>";
     } else {
         echo "<p>Error: " . $stmt->error . "</p>";
     }
@@ -113,20 +84,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($_POST['name']) && !empty($_P
     exit;
 }
 
-// Call the synchronize function before fetching users
-synchronizeUploads($conn);
 
-// Fetch all users for displaying in the table
+// Fetch users from database
 $users = [];
 $result = $conn->query("SELECT * FROM users");
-if ($result) {
+if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $users[] = $row;
     }
 }
 
-// Set table visibility based on user existence
-$tableDisplayStyle = !empty($users) ? 'table' : 'none'; // Set initial visibility based on users
 ?>
 
 <!DOCTYPE html>
@@ -137,65 +104,48 @@ $tableDisplayStyle = !empty($users) ? 'table' : 'none'; // Set initial visibilit
     <title>User Management</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f4f4f4;
-        }
-        h2 {
-            color: #333;
-        }
-        button {
-            padding: 10px 15px;
-            margin: 5px;
-            border: none;
-            background-color: #5bc0de;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #31b0d5;
-        }
-        #userForm {
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="email"], input[type="date"], input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-            display: <?php echo $tableDisplayStyle; ?>; /* Set initial visibility from PHP */
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            background-color: #fff;
-        }
-        th {
-            background-color: #5bc0de;
-            color: white;
-        }
-        tbody tr:hover {
-            background-color: #f1f1f1;
-        }
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid black;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+input[type="text"], input[type="email"], input[type="date"], input[type="file"] {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
     </style>
 </head>
 <body>
@@ -206,22 +156,25 @@ $tableDisplayStyle = !empty($users) ? 'table' : 'none'; // Set initial visibilit
 
 <div id="userForm" style="display:none;">
     <form method="POST" enctype="multipart/form-data">
-        <label>Name:</label><input type="text" name="name" required>
-        <label>Mobile Number:</label><input type="text" name="mobile_number" required>
-        <label>WhatsApp No:</label><input type="text" name="whatsapp_no">
-        <label>Email:</label><input type="email" name="email">
-        <label>Date of Birth:</label><input type="date" name="dob">
-        <label>Zipcode:</label><input type="text" name="zipcode">
-        <label>Date of Joining:</label><input type="date" name="doj">
-        <label>Transaction ID:</label><input type="text" name="transaction_id" required>
-        <label>Offer Letter:</label><input type="file" name="offer_letter" accept=".pdf,.doc,.docx">
-        <label>Intern Certificate:</label><input type="file" name="intern_certificate" accept=".pdf,.doc,.docx">
-        <label>Transaction Proof:</label><input type="file" name="transaction_proof" accept=".pdf,.doc,.docx">
+        <input type="hidden" name="userId" id="userId" value="">
+        <input type="hidden" name="editFlag" id="editFlag" value="false">
+        <label>Name:</label><input type="text" name="name" id="userName" required><br>
+        <label>Mobile Number:</label><input type="text" name="mobile_number" id="userMobile" required><br>
+        <label>WhatsApp No:</label><input type="text" name="whatsapp_no" id="userWhatsApp"><br>
+        <label>Email:</label><input type="email" name="email" id="userEmail"><br>
+        <label>Date of Birth:</label><input type="date" name="dob" id="userDOB"><br>
+        <label>City:</label><input type="text" name="city" id="userCity" required><br>
+        <label>Zipcode:</label><input type="text" name="zipcode" id="userZipcode" required><br>
+        <label>Date of Joining:</label><input type="date" name="doj" id="userDOJ"><br>
+        <label>Transaction ID:</label><input type="text" name="transaction_id" id="userTransactionID"><br>
+        <label>Offer Letter:</label><input type="file" name="offer_letter" accept=".pdf,.doc,.docx"><br>
+        <label>Intern Certificate:</label><input type="file" name="intern_certificate" accept=".pdf,.doc,.docx"><br>
+        <label>Transaction Proof:</label><input type="file" name="transaction_proof" accept=".pdf,.doc,.docx"><br>
         <input type="submit" value="Submit">
     </form>
 </div>
 
-<table id="userTable">
+<table id="userTable" style="display:none;">
     <thead>
         <tr>
             <th>ID</th>
@@ -230,12 +183,14 @@ $tableDisplayStyle = !empty($users) ? 'table' : 'none'; // Set initial visibilit
             <th>WhatsApp No</th>
             <th>Email</th>
             <th>Date of Birth</th>
+            <th>City</th>
             <th>Zipcode</th>
             <th>Date of Joining</th>
             <th>Transaction ID</th>
             <th>Offer Letter</th>
             <th>Intern Certificate</th>
             <th>Transaction Proof</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -247,38 +202,58 @@ $tableDisplayStyle = !empty($users) ? 'table' : 'none'; // Set initial visibilit
             <td><?php echo htmlspecialchars($user['whatsapp_no']); ?></td>
             <td><?php echo htmlspecialchars($user['email']); ?></td>
             <td><?php echo htmlspecialchars($user['dob']); ?></td>
+            <td><?php echo htmlspecialchars($user['city']); ?></td>
             <td><?php echo htmlspecialchars($user['zipcode']); ?></td>
             <td><?php echo htmlspecialchars($user['doj']); ?></td>
             <td><?php echo htmlspecialchars($user['transaction_id']); ?></td>
-            <td><a href="<?php echo htmlspecialchars($user['offer_letter']); ?>" target="_blank">View</a></td>
-            <td><a href="<?php echo htmlspecialchars($user['intern_certificate']); ?>" target="_blank">View</a></td>
-            <td><a href="<?php echo htmlspecialchars($user['transaction_proof']); ?>" target="_blank">View</a></td>
+            <td><a href="<?php echo htmlspecialchars($user['offer_letter']); ?>">View</a></td>
+            <td><a href="<?php echo htmlspecialchars($user['intern_certificate']); ?>">View</a></td>
+            <td><a href="<?php echo htmlspecialchars($user['transaction_proof']); ?>">View</a></td>
+            <td>
+                <button onclick="editUser('<?php echo htmlspecialchars($user['id']); ?>', '<?php echo htmlspecialchars($user['name']); ?>', '<?php echo htmlspecialchars($user['mobile_number']); ?>', '<?php echo htmlspecialchars($user['whatsapp_no']); ?>', '<?php echo htmlspecialchars($user['email']); ?>', '<?php echo htmlspecialchars($user['dob']); ?>', '<?php echo htmlspecialchars($user['city']); ?>', '<?php echo htmlspecialchars($user['zipcode']); ?>', '<?php echo htmlspecialchars($user['doj']); ?>',                '<?php echo htmlspecialchars($user['transaction_id']); ?>')">Edit</button>
+                <a href="delete_user.php?id=<?php echo htmlspecialchars($user['id']); ?>" onclick="return confirm('Are you sure you want to delete this user?');">Delete</a>
+            </td>
         </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
 
 <script>
-    // Function to toggle the user form
+    // Function to show/hide the user form
     function toggleUserForm() {
         var userForm = document.getElementById('userForm');
         userForm.style.display = userForm.style.display === 'none' ? 'block' : 'none';
+        // Clear form fields
+        if (userForm.style.display === 'block') {
+            document.getElementById('userForm').reset();
+            document.getElementById('editFlag').value = 'false';
+        }
     }
 
-    // Function to toggle the user table
+    // Function to show/hide the user table
     function toggleUserTable() {
         var userTable = document.getElementById('userTable');
-        userTable.style.display = userTable.style.display === 'table' ? 'none' : 'table';
+        userTable.style.display = userTable.style.display === 'none' ? 'table' : 'none';
     }
 
-    // Show the user table if there are users initially
-    document.addEventListener('DOMContentLoaded', function() {
-        <?php if (!empty($users)): ?>
-            document.getElementById('userTable').style.display = 'table';
-        <?php endif; ?>
-    });
+    // Function to populate the form with user data for editing
+    function editUser(id, name, mobile, whatsapp, email, dob, city, zipcode, doj, transaction_id) {
+        document.getElementById('userId').value = id;
+        document.getElementById('userName').value = name;
+        document.getElementById('userMobile').value = mobile;
+        document.getElementById('userWhatsApp').value = whatsapp;
+        document.getElementById('userEmail').value = email;
+        document.getElementById('userDOB').value = dob;
+        document.getElementById('userCity').value = city;
+        document.getElementById('userZipcode').value = zipcode;
+        document.getElementById('userDOJ').value = doj;
+        document.getElementById('userTransactionID').value = transaction_id;
+        document.getElementById('editFlag').value = 'true';
+        toggleUserForm();
+    }
 </script>
 
 <?php
 $conn->close();
 ?>
+
